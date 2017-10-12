@@ -1,12 +1,9 @@
 /*
 Copyright 2016 The Kubernetes Authors.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +13,6 @@ limitations under the License.
 
 /*
  nptest.go
-
  Dual-mode program - runs as both the orchestrator and as the worker nodes depending on command line flags
  The RPC API is contained wholly within this file.
 */
@@ -158,17 +154,11 @@ func init() {
 	testcases = []*testcase{
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "1 iperf TCP. Same VM using Pod IP", Type: iperfTcpTest, ClusterIP: false, MSS: mssMin},
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "2 iperf TCP. Same VM using Virtual IP", Type: iperfTcpTest, ClusterIP: true, MSS: mssMin},
-		{SourceNode: "netperf-w1", DestinationNode: "netperf-w3", Label: "3 iperf TCP. Remote VM using Pod IP", Type: iperfTcpTest, ClusterIP: false, MSS: mssMin},
-		{SourceNode: "netperf-w3", DestinationNode: "netperf-w2", Label: "4 iperf TCP. Remote VM using Virtual IP", Type: iperfTcpTest, ClusterIP: true, MSS: mssMin},
 		{SourceNode: "netperf-w2", DestinationNode: "netperf-w2", Label: "5 iperf TCP. Hairpin Pod to own Virtual IP", Type: iperfTcpTest, ClusterIP: true, MSS: mssMin},
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "6 iperf UDP. Same VM using Pod IP", Type: iperfUdpTest, ClusterIP: false, MSS: mssMax},
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "7 iperf UDP. Same VM using Virtual IP", Type: iperfUdpTest, ClusterIP: true, MSS: mssMax},
-		{SourceNode: "netperf-w1", DestinationNode: "netperf-w3", Label: "8 iperf UDP. Remote VM using Pod IP", Type: iperfUdpTest, ClusterIP: false, MSS: mssMax},
-		{SourceNode: "netperf-w3", DestinationNode: "netperf-w2", Label: "9 iperf UDP. Remote VM using Virtual IP", Type: iperfUdpTest, ClusterIP: true, MSS: mssMax},
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "10 netperf. Same VM using Pod IP", Type: netperfTest, ClusterIP: false},
 		{SourceNode: "netperf-w1", DestinationNode: "netperf-w2", Label: "11 netperf. Same VM using Virtual IP", Type: netperfTest, ClusterIP: true},
-		{SourceNode: "netperf-w1", DestinationNode: "netperf-w3", Label: "12 netperf. Remote VM using Pod IP", Type: netperfTest, ClusterIP: false},
-		{SourceNode: "netperf-w3", DestinationNode: "netperf-w2", Label: "13 netperf. Remote VM using Virtual IP", Type: netperfTest, ClusterIP: true},
 	}
 
 	currentJobIndex = 0
@@ -268,7 +258,6 @@ func allocateWorkToClient(workerS *workerState, reply *WorkItem) {
 			reply.IsIdle = true
 			return
 		}
-		fmt.Printf("Requesting jobrun '%s' from %s to %s for MSS %d\n", v.Label, v.SourceNode, v.DestinationNode, v.MSS)
 		reply.ClientItem.Type = v.Type
 		reply.IsClientItem = true
 		workerS.idle = false
@@ -279,6 +268,7 @@ func allocateWorkToClient(workerS *workerState, reply *WorkItem) {
 		} else {
 			reply.ClientItem.Host = os.Getenv("NETPERF_W2_SERVICE_HOST")
 		}
+		fmt.Printf("Requesting jobrun '%s' from %s to %s for MSS %d with Host %s\n", v.Label, v.SourceNode, v.DestinationNode, v.MSS, reply.ClientItem.Host)
 
 		switch {
 		case v.Type == iperfTcpTest || v.Type == iperfUdpTest:
@@ -516,7 +506,7 @@ func handleClientWorkItem(client *rpc.Client, workItem *WorkItem) {
 		client.Call("NetPerfRpc.ReceiveOutput", WorkerOutput{Output: outputString, Worker: worker, Type: workItem.ClientItem.Type}, &reply)
 	}
 	// Client COOLDOWN period before asking for next work item to replenish burst allowance policers etc
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 }
 
 // startWork : Entry point to the worker infinite loop
@@ -567,7 +557,7 @@ func startWork() {
 
 // Invoke and indefinitely run an iperf server
 func iperfServer() {
-	output, success := cmdExec(iperf3Path, []string{iperf3Path, "-s", host, "-J", "-i", "60"}, 15)
+	output, success := cmdExec(iperf3Path, []string{iperf3Path, "-s", host, "-J", "-i", "15"}, 15)
 	if success {
 		fmt.Println(output)
 	}
