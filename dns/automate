@@ -1,0 +1,14 @@
+#!/bin/sh
+
+printf "**********before running the dnsperf tests**********\n"
+
+python py/run_perf.py --params params/default.yaml --use-cluster-dns --out-dir dns/out
+
+printf "***********after running dnsperf tests**********\n"
+
+
+printf "**********before aggregate results **********\n"
+
+python py/ingest.py --db out/db out/latest/*.out
+
+printf "**********after aggregate results**********\n"
