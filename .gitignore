@@ -22,4 +22,3 @@ build
 *.un~
 Session.vim
 .netrwhist
-.idea/**
