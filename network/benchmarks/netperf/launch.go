@@ -71,7 +71,7 @@ func init() {
 	flag.IntVar(&iterations, "iterations", 1,
 		"Number of iterations to run")
 	flag.StringVar(&tag, "tag", runUUID, "CSV file suffix")
-	flag.StringVar(&kubeConfig, "kubeConfig", "",
+	flag.StringVar(&kubeConfig, "kubeConfig", "./config",
 		"Location of the kube configuration file ($HOME/.kube/config")
 }
 
@@ -167,7 +167,6 @@ func createServices(c *kubernetes.Clientset) bool {
 		return false
 	}
 	fmt.Println("Created orchestrator service")
-
 	// Create the netperf-w2 service that points a clusterIP at the worker 2 pod
 	netperfW2Labels := map[string]string{"app": "netperf-w2"}
 	netperfW2Service := &api.Service{

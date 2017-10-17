@@ -22,3 +22,6 @@ build
 *.un~
 Session.vim
 .netrwhist
+
+# k8s credential files
+network/benchmarks/netperf/credentials/*
